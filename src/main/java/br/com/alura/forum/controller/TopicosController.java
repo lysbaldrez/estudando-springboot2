@@ -10,6 +10,7 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties.Pageable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -47,6 +48,9 @@ public class TopicosController {
     
     @GetMapping
     @Cacheable(value = "listaDeTopicos")
+    // Cache é um recurso que a gente utiliza para ganhar performance na aplicação, principalmente onde se tem consulta no banco de dados
+    // Se utiliza para guardar esse retorno em memória, que é mais rápido
+    // Cache é mais utilizada em tabelas que nunca ou raramente são utilizadas (país, estado, cidade, tipos)
     public Page<TopicoDto> lista (@RequestParam(required=false) String nomeCurso,
                                   @PageableDefault(sort = "id", direction = Direction.DESC, page = 0, size = 10) org.springframework.data.domain.Pageable paginacao) {
         
@@ -62,6 +66,8 @@ public class TopicosController {
     
     @PostMapping
     @Transactional
+    @CacheEvict(value = "listaDeTopicos", allEntries = true)
+    // Também invalidar o cache quando atualiza e deleta porque mudou as infos que estavam guardadas no cache
     public ResponseEntity<TopicoDto> cadastrar (@RequestBody @Valid TopicoForm form, UriComponentsBuilder uriBuilder ) {
         Topico topico = form.converter(cursoRepository);
         topicoRepository.save(topico);
@@ -82,6 +88,7 @@ public class TopicosController {
     
     @PutMapping ("/{id}")
     @Transactional
+    @CacheEvict(value = "listaDeTopicos", allEntries = true)
     public ResponseEntity <TopicoDto> atualizar (@PathVariable Long id, @RequestBody @Valid AtualizacaoTopicoForm form) {
         Optional<Topico> optional = topicoRepository.findById(id);
         if (optional.isPresent()) {
@@ -96,6 +103,7 @@ public class TopicosController {
     
     @DeleteMapping("/{id}")
     @Transactional
+    @CacheEvict(value = "listaDeTopicos", allEntries = true)
     public ResponseEntity <TopicoDto> remover (@PathVariable Long id) {
         Optional<Topico> optional = topicoRepository.findById(id);
         if (optional.isPresent()) {
