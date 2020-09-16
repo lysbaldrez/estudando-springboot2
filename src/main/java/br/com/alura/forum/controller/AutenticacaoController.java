@@ -20,9 +20,8 @@ import br.com.alura.forum.controller.form.LoginForm;
 
 @RestController
 @RequestMapping("/auth")
-@Profile("prod")
+@Profile(value = {"prod", "test"})
 public class AutenticacaoController {
-
     
     @Autowired
     private AuthenticationManager authManager;
@@ -41,10 +40,6 @@ public class AutenticacaoController {
             return ResponseEntity.ok(new TokenDto(token, "Bearer"));
         } catch (AuthenticationException e) {
             return ResponseEntity.badRequest().build();
-        }
-        
-        
-        
-        
+        }               
     }
 }
